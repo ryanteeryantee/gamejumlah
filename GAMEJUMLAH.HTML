@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dunia Hitung Ceria Kelas 1 SD</title>
+    <!-- Pustaka Canvas-Confetti untuk efek perayaan -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Ubuntu', sans-serif;
+            background: #70a1ff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- CONTAINER UTAMA GAME --- */
+        #game-container {
+            width: 100%;
+            max-width: 800px;
+            height: 100vh;
+            max-height: 650px;
+            background: linear-gradient(to bottom, #70a1ff 0%, #aee1fc 70%, #badc58 100%);
+            border: 6px solid #fbc531;
+            border-radius: 32px;
+            box-shadow: 0 15px 0 rgba(0,0,0,0.15);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #game-container:fullscreen {
+            max-width: 100% !important;
+            max-height: 100vh !important;
+            border-radius: 0;
+            border: none;
+        }
+
+        /* --- DEKORASI KARTUN LATAR BELAKANG --- */
+        .sun {
+            position: absolute;
+            top: 70px;
+            right: 40px;
+            width: 75px;
+            height: 75px;
+            background: #ffdd59;
+            border-radius: 50%;
+            box-shadow: 0 0 20px #ffdd59;
+            z-index: 1;
+        }
+        .cloud {
+            position: absolute;
+            background: #ffffff;
+            border-radius: 100px;
+            z-index: 1;
+            opacity: 0.9;
+        }
+        .cloud::before, .cloud::after {
+            content: '';
+            position: absolute;
+            background: #ffffff;
+            border-radius: 50%;
+        }
+        .cloud1 { width: 100px; height: 35px; top: 80px; left: 5%; animation: floatCloud 20s infinite linear; }
+        .cloud1::before { width: 45px; height: 45px; top: -20px; left: 15px; }
+        .cloud1::after { width: 55px; height: 55px; top: -30px; right: 15px; }
+
+        .cloud2 { width: 120px; height: 40px; top: 120px; right: 20%; animation: floatCloud 28s infinite linear reverse; }
+        .cloud2::before { width: 50px; height: 50px; top: -25px; left: 20px; }
+        .cloud2::after { width: 65px; height: 65px; top: -35px; right: 25px; }
+
+        @keyframes floatCloud {
+            0% { transform: translateX(-20px); }
+            50% { transform: translateX(20px); }
+            100% { transform: translateX(-20px); }
+        }
+
+        .grass-floor {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background: #6ab04c;
+            z-index: 1;
+            border-top: 6px solid #4cd137;
+        }
+
+        /* --- HEADER INFO --- */
+        header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 3;
+        }
+        .badge {
+            background: linear-gradient(135deg, #ff7675, #ff4757);
+            color: white;
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 0 4px 0 #b33939;
+            border: 2px solid #fff;
+        }
+        #score-badge {
+            background: linear-gradient(135deg, #ffa502, #ff7f50);
+            box-shadow: 0 4px 0 #d35400;
+        }
+        #btn-fullscreen {
+            background: linear-gradient(135deg, #1dd1a1, #10ac84);
+            color: white;
+            border: 2px solid #fff;
+            padding: 8px 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            box-shadow: 0 4px 0 #0e7453;
+            font-family: inherit;
+        }
+        #btn-fullscreen:active { transform: translateY(4px); box-shadow: none; }
+
+        /* --- AREA UTAMA GAME --- */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            z-index: 3;
+            margin-top: 10px;
+        }
+        
+        .monster-box {
+            font-size: 5.5rem;
+            margin-bottom: 5px;
+            animation: bounce 1.5s infinite ease-in-out;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-15px) scale(1.05); }
+        }
+
+        #monster-bubble {
+            background: #ffffff;
+            border: 4px solid #74b9ff;
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #2f3542;
+            margin-bottom: 15px;
+            position: relative;
+            box-shadow: 0 5px 0 rgba(0,0,0,0.05);
+            text-align: center;
+            max-width: 85%;
+        }
+        #monster-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 14px 14px 0;
+            border-style: solid;
+            border-color: #ffffff transparent;
+        }
+
+        .question-text {
+            font-size: 3.8rem;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #2ed573, #26af5f);
+            padding: 8px 45px;
+            border-radius: 25px;
+            border: 5px solid #ffffff;
+            box-shadow: 0 6px 0 #1e824c, 0 8px 15px rgba(0,0,0,0.15);
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.2);
+        }
+
+        /* --- TOMBOL JAWABAN --- */
+        .options-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 460px;
+        }
+        .btn-option {
+            color: white;
+            border: 3px solid #ffffff;
+            padding: 12px;
+            font-size: 2.5rem;
+            font-weight: bold;
+            border-radius: 22px;
+            cursor: pointer;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.15);
+            font-family: inherit;
+            transition: transform 0.1s;
+        }
+        .btn-option:active { transform: translateY(6px); box-shadow: none !important; }
+        .options-container button:nth-child(1) { background: linear-gradient(135deg, #ff6b81, #ff4757); box-shadow: 0 6px 0 #cf2135; }
+        .options-container button:nth-child(2) { background: linear-gradient(135deg, #1e90ff, #3742fa); box-shadow: 0 6px 0 #1b26cc; }
+        .options-container button:nth-child(3) { background: linear-gradient(135deg, #ffa502, #ff7f50); box-shadow: 0 6px 0 #cc621b; }
+        .options-container button:nth-child(4) { background: linear-gradient(135deg, #eccc68, #ffa502); box-shadow: 0 6px 0 #bfa100; }
+
+        /* FOOTER PROGRESS BAR */
+        footer {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            z-index: 3;
+            padding-bottom: 5px;
+        }
+        .progress-bar-container {
+            width: 90%;
+            background-color: #f1f2f6;
+            height: 20px;
+            border-radius: 50px;
+            overflow: hidden;
+            border: 3px solid #ced6e0;
+        }
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(to right, #2ed573, #1dd1a1);
+            transition: width 0.3s ease;
+        }
+
+        /* --- LAYAR KARTU POP-UP (START & END) --- */
+        .screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(112, 161, 255, 0.95); /* Sedikit transparan agar background kartun mengintip */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        /* Kotak Pendahuluan Putih Lucu */
+        .intro-card {
+            background: #ffffff;
+            border: 5px solid #ffa502;
+            border-radius: 28px;
+            padding: 20px 30px;
+            max-width: 600px;
+            box-shadow: 0 12px 0 rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .intro-card h1 { 
+            font-size: 2.6rem; 
+            color: #ff4757; 
+            text-shadow: 2px 2px 0px #feca57; 
+            margin: 0 0 10px 0; 
+        }
+        
+        .intro-character {
+            font-size: 4.5rem;
+            margin: 10px 0;
+            animation: bounce 2s infinite ease-in-out;
+        }
+
+        /* Kotak Cara Bermain */
+        .guide-box {
+            background: #f1f2f6;
+            border: 3px dashed #74b9ff;
+            border-radius: 18px;
+            padding: 15px;
+            text-align: left;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .guide-title {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #2f3542;
+            margin-bottom: 8px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+        }
+        .guide-item {
+            font-size: 1rem;
+            color: #57606f;
+            margin: 6px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #2ed573, #1dd1a1);
+            color: white;
+            border: 4px solid #fff;
+            padding: 12px 45px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #10ac84, 0 5px 10px rgba(0,0,0,0.15);
+            font-family: inherit;
+        }
+        .btn-start:active { transform: translateY(6px); box-shadow: none; }
+        .hide { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- AREA CANVAS GAME -->
+    <div id="game-container">
+        
+        <!-- DEKORASI LATAR BELAKANG AKTIF -->
+        <div class="sun"></div>
+        <div class="cloud cloud1"></div>
+        <div class="cloud cloud2"></div>
+        <div class="grass-floor"></div>
+
+        <!-- HEADER INFO -->
+        <header>
+            <div id="level-badge" class="badge">LEVEL 1</div>
+            <button id="btn-fullscreen" onclick="toggleFullscreen()">🖥️ LAYAR PENUH</button>
+            <div id="score-badge" class="badge">Soal: 1/5</div>
+        </header>
+
+        <!-- KONTEN UTAMA BERMAIN -->
+        <div class="main-content">
+            <div id="monster" class="monster-box">🐙</div>
+            <div id="monster-bubble">Halo teman-teman! Yuk bantu aku berhitung! 😊</div>
+            <div id="question" class="question-text">1 + 1 = ?</div>
+
+            <div class="options-container">
+                <button class="btn-option" onclick="checkAnswer(this)">2</button>
+                <button class="btn-option" onclick="checkAnswer(this)">3</button>
+                <button class="btn-option" onclick="checkAnswer(this)">4</button>
+                <button class="btn-option" onclick="checkAnswer(this)">5</button>
+            </div>
+        </div>
+
+        <!-- PROGRESS BAR -->
+        <footer>
+            <div class="progress-bar-container">
+                <div id="progress-bar"></div>
+            </div>
+        </footer>
+
+        <!-- LAYAR PENDAHULUAN BARU (INTRO & CARA BERMAIN) -->
+        <div id="start-screen" class="screen">
+            <div class="intro-card">
+                <h1>🎒 PETUALANGAN ANGKA! 🌟</h1>
+                <div class="intro-character">🦁</div>
+                
+                <!-- Kotak Petunjuk Cara Bermain -->
+                <div class="guide-box">
+                    <div class="guide-title">📝 CARA BERMAIN:</div>
+                    <div class="guide-item">🌐 <span>Tekan tombol <b>"LAYAR PENUH"</b> di atas agar bermain lebih puas.</span></div>
+                    <div class="guide-item">🔢 <span>Lihat soal penjumlahan pada <b>Papan Hijau</b>.</span></div>
+                    <div class="guide-item">🎈 <span>Klik <b>Tombol Balon Warna-Warni</b> untuk memilih jawaban benar.</span></div>
+                    <div class="guide-item">🎉 <span>Jika <b>BENAR</b>, konfeti pesta akan muncul meledak!</span></div>
+                    <div class="guide-item">👹 <span>Jika <b>SALAH</b>, monster akan berbunyi <i>"RRRRRR!"</i>.</span></div>
+                </div>
+
+                <button class="btn-start" onclick="startGame()">MULAI BERMAIN! 🚀</button>
+            </div>
+        </div>
+
+        <!-- LAYAR AKHIR MENANG -->
+        <div id="end-screen" class="screen hide">
+            <div class="intro-card" style="border-color: #00eceb;">
+                <h1 style="color: #0072ff; text-shadow: 2px 2px 0px #aee1fc;">🏆 LUAR BIASA HEBAT! 🏆</h1>
+                <div class="intro-character">🦄</div>
+                <p style="font-size: 1.2rem; color: #57606f; font-weight: bold;">Hore! Kamu berhasil memenangkan semua tantangan level!</p>
+                <button class="btn-start" onclick="resetGame()" style="background:linear-gradient(135deg, #ff9f43, #ff6b6b)">MAIN LAGI 🔄</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const gameData = [
+            [ {a: 2, b: 1, ans: 3}, {a: 1, b: 3, ans: 4}, {a: 3, b: 2, ans: 5}, {a: 4, b: 1, ans: 5}, {a: 2, b: 2, ans: 4} ], // LV 1
+            [ {a: 5, b: 2, ans: 7}, {a: 4, b: 3, ans: 7}, {a: 6, b: 1, ans: 7}, {a: 3, b: 5, ans: 8}, {a: 5, b: 4, ans: 9} ], // LV 2
+            [ {a: 5, b: 5, ans: 10}, {a: 7, b: 3, ans: 10}, {a: 6, b: 4, ans: 10}, {a: 8, b: 2, ans: 10}, {a: 9, b: 1, ans: 10} ], // LV 3
+            [ {a: 6, b: 5, ans: 11}, {a: 8, b: 4, ans: 12}, {a: 7, b: 5, ans: 12}, {a: 9, b: 4, ans: 13}, {a: 8, b: 6, ans: 14} ], // LV 4
+            [ {a: 10, b: 5, ans: 15}, {a: 9, b: 7, ans: 16}, {a: 8, b: 9, ans: 17}, {a: 11, b: 4, ans: 15}, {a: 12, b: 6, ans: 18} ] // LV 5
+        ];
+
+        const monsterIcons = ["🐙", "🦁", "🐸", "🐼", "🦄"];
+        let currentLevel = 0;
+        let currentQuestionIdx = 0;
+        let correctAnswer = 0;
+        let isWaiting = false;
+
+        // Fungsi Audio Monster Bergetar "Rrrrrrr"
+        function playMonsterSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc1 = audioCtx.createOscillator();
+                const osc2 = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                osc1.type = 'sawtooth';
+                osc2.type = 'square';
+                
+                osc1.frequency.setValueAtTime(75, audioCtx.currentTime);
+                osc2.frequency.setValueAtTime(78, audioCtx.currentTime);
+                
+                for (let i = 0; i < 6; i++) {
+                    let timeOffset = i * 0.1;
+                    osc1.frequency.setValueAtTime(75, audioCtx.currentTime + timeOffset);
+                    osc1.frequency.linearRampToValueAtTime(120, audioCtx.currentTime + timeOffset + 0.05);
+                    osc2.frequency.setValueAtTime(78, audioCtx.currentTime + timeOffset);
+                    osc2.frequency.linearRampToValueAtTime(110, audioCtx.currentTime + timeOffset + 0.05);
+                }
+
+                gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+
+                osc1.connect(gainNode);
+                osc2.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                osc1.start();
+                osc2.start();
+                osc1.stop(audioCtx.currentTime + 0.6);
+                osc2.stop(audioCtx.currentTime + 0.6);
+            } catch (e) {
+                console.log("Audio diblokir.");
+            }
+        }
+
+        function startGame() {
+            document.getElementById('start-screen').classList.add('hide');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            isWaiting = false;
+            const monsterBubble = document.getElementById('monster-bubble');
+            const monster = document.getElementById('monster');
+            
+            monster.innerText = monsterIcons[currentLevel];
+            monsterBubble.innerText = "Ayo hitung teliti ya, kamu pasti bisa! ✨";
+            monsterBubble.style.color = "#2f3542";
+
+            document.getElementById('level-badge').innerText = `LEVEL ${currentLevel + 1}`;
+            document.getElementById('score-badge').innerText = `Soal: ${currentQuestionIdx + 1}/5`;
+            
+            const totalDone = (currentLevel * 5) + currentQuestionIdx;
+            const progressPercent = (totalDone / 25) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+
+            const qData = gameData[currentLevel][currentQuestionIdx];
+            document.getElementById('question').innerText = `${qData.a} + ${qData.b} = ?`;
+            correctAnswer = qData.ans;
+
+            let options = [correctAnswer];
+            while(options.length < 4) {
+                let wrongAns = correctAnswer + Math.floor(Math.random() * 5) - 2;
+                if(wrongAns > 0 && !options.includes(wrongAns)) {
+                    options.push(wrongAns);
+                }
+            }
+            options.sort(() => Math.random() - 0.5);
+
+            const buttons = document.querySelectorAll('.btn-option');
+            buttons.forEach((btn, index) => {
+                btn.innerText = options[index];
+                btn.style.opacity = "1";
+            });
+        }
+
+        function checkAnswer(selectedButton) {
+            if (isWaiting) return;
+            isWaiting = true;
+
+            const userAnswer = parseInt(selectedButton.innerText);
+            const monsterBubble = document.getElementById('monster-bubble');
+            const monster = document.getElementById('monster');
+
+            if (userAnswer === correctAnswer) {
+                monster.innerText = "🥰";
+                monsterBubble.innerText = "HOREEE! Jawabanmu Betul! 🌟";
+                monsterBubble.style.color = "#2ed573";
+                
+                confetti({
+                    particleCount: 125,
+                    spread: 80,
+                    origin: { y: 0.6 }
+                });
+
+                setTimeout(() => {
+                    currentQuestionIdx++;
+                    if (currentQuestionIdx >= 5) {
+                        currentQuestionIdx = 0;
+                        currentLevel++;
+                    }
+
+                    if (currentLevel >= 5) {
+                        document.getElementById('progress-bar').style.width = `100%`;
+                        document.getElementById('end-screen').classList.remove('hide');
+                        
+                        let duration = 4 * 1000;
+                        let end = Date.now() + duration;
+                        (function frame() {
+                            confetti({ particleCount: 8, angle: 60, spread: 65, origin: { x: 0 } });
+                            confetti({ particleCount: 8, angle: 120, spread: 65, origin: { x: 1 } });
+                            if (Date.now() < end) { requestAnimationFrame(frame); }
+                        }());
+                    } else {
+                        loadQuestion();
+                    }
+                }, 1500);
+
+            } else {
+                monster.innerText = "👹";
+                monsterBubble.innerText = "RRRRRRRR! Yah, coba dihitung lagi! 🧐";
+                monsterBubble.style.color = "#ff4757";
+                
+                playMonsterSound();
+
+                setTimeout(() => {
+                    monster.innerText = monsterIcons[currentLevel];
+                    monsterBubble.innerText = "Coba hitung pakai jari pelan-pelan ya!";
+                    monsterBubble.style.color = "#2f3542";
+                    selectedButton.style.opacity = "0.2";
+                    isWaiting = false;
+                }, 1800);
+            }
+        }
+
+        function resetGame() {
+            currentLevel = 0;
+            currentQuestionIdx = 0;
+            document.getElementById('end-screen').classList.add('hide');
+            loadQuestion();
+        }
+
+        function toggleFullscreen() {
+            const container = document.getElementById('game-container');
+            if (!document.fullscreenElement) {
+                container.requestFullscreen().catch(err => {
+                    alert(`Gagal layar penuh: ${err.message}`);
+                });
+                document.getElementById('btn-fullscreen').innerText = "❌ KELUAR LAYAR";
+            } else {
+                document.exitFullscreen();
+                document.getElementById('btn-fullscreen').innerText = "🖥️ LAYAR PENUH";
+            }
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) {
+                document.getElementById('btn-fullscreen').innerText = "🖥️ LAYAR PENUH";
+            }
+        });
+    </script>
+</body>
+</html>
